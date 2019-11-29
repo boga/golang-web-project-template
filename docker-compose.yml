@@ -1,18 +1,39 @@
 version: '2'
 
 services:
+  #  db:
+  #    image: postgres:12-alpine@sha256:471f30ae530d2f80996c3ed2c96fc5b09d23defeeeabe629466f5498266b3ec1
+  #    container_name: "ca_db"
+  #    restart: on-failure
+  #    environment:
+  #      POSTGRES_PASSWORD: ${DB_PASSWORD}
+  #      POSTGRES_USER: ${DB_USER}
+  #      POSTGRES_DB: ${DB_NAME}
+  #    ports:
+  #      - 127.0.0.1:${DB_PORT}:5432
+  #    volumes:
+  #      - db_data:/var/lib/postgresql/data
+  #    logging:
+  #      driver: json-file
+  #      options:
+  #        max-size: "10m"
+  #        max-file: "5"
+
   db:
-    image: postgres:12-alpine@sha256:471f30ae530d2f80996c3ed2c96fc5b09d23defeeeabe629466f5498266b3ec1
-    container_name: "ca_db"
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    container_name: ca_mysql
+    image: mysql:8
     restart: on-failure
-    environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_DB: ${DB_NAME}
     ports:
-      - 127.0.0.1:${DB_PORT}:5432
+      - 127.0.0.1:${DB_PORT}:3306
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/mysql
+    #      - ./mysql.cnf:/etc/mysql/mysql.conf.d/zz-mysqld.cnf
     logging:
       driver: json-file
       options:

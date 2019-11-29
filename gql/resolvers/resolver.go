@@ -19,9 +19,6 @@ func (r *Resolver) Mutation() gql.MutationResolver {
 func (r *Resolver) Query() gql.QueryResolver {
 	return &queryResolver{r}
 }
-func (r *Resolver) User() gql.UserResolver {
-	return &userResolver{r}
-}
 
 type mutationResolver struct{ *Resolver }
 

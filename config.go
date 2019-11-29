@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/joho/godotenv"
@@ -13,16 +14,46 @@ import (
 type Config struct {
 	Database *databaseConfig
 	Debug    bool
+	JWT      *jwtConfig
 }
 
 type databaseConfig struct {
 	driver string
+	dsn    string
 	host   string
 	name   string
 	pass   string
 	port   int
 	user   string
 }
+
+type jwtConfig struct {
+	AuthTokenTTL *time.Duration
+	Secret       string
+}
+
+func (c jwtConfig) Valid() error {
+	if c.Secret == "" || c.AuthTokenTTL == nil {
+		return fmt.Errorf("jwt config is not valid, some options missing")
+	}
+
+	return nil
+}
+
+// func (c databaseConfig) GetDSN() error {
+// 	var dsn string
+// 	if c.dsn == "" {
+// 		dsn = fmt.Sprintf("%s://%s:%s@%s:%d/%s", c.driver,
+// 			c.user, c.pass, c.host, c.port, c.name)
+// 	}
+// 	if c.Valid() == nil {
+// 		// "test:test@(localhost:3306)/test"
+// 		dsn = fmt.Sprintf("%s:%s@(%s:%d)/%s", c.driver,
+// 			c.user, c.pass, c.host, c.port, c.name)
+// 	}
+//
+// 	return dsn
+// }
 
 func (c databaseConfig) Valid() error {
 	valid := len(c.driver) != 0 &&
@@ -83,9 +114,23 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
+	AuthTokenTTLStr := getEnvString("JWT_AUTH_TTL", "") // 30 days
+	AuthTokenTTL, err := time.ParseDuration(AuthTokenTTLStr)
+	if err != nil {
+		panic("Cant't parse duration value " + AuthTokenTTLStr)
+	}
+	jwtConf := jwtConfig{
+		AuthTokenTTL: &AuthTokenTTL,
+		Secret:       getEnvString("JWT_SECRET", ""),
+	}
+	if err := jwtConf.Valid(); err != nil {
+		return nil, err
+	}
+
 	c := &Config{
 		Debug:    getEnvBool("DEBUG", false),
 		Database: &dbConf,
+		JWT:      &jwtConf,
 	}
 
 	return c, nil

@@ -1,0 +1,4 @@
+/docker-compose.override.yml
+/mysql.cnf
+/mysql-error.log
+/mysql-general.log

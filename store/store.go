@@ -7,6 +7,7 @@ import (
 )
 
 type Store struct {
+	JWTStore  *JWTStore
 	UserStore *UserStore
 }
 
@@ -16,6 +17,10 @@ func NewStore(config *core.Config) (*Store, error) {
 		return nil, fmt.Errorf("can't create DB: %w", err)
 	}
 	return &Store{
+		JWTStore: &JWTStore{
+			config: config,
+			db:     db,
+		},
 		UserStore: &UserStore{db: db},
 	}, nil
 }

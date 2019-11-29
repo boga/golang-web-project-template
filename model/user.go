@@ -7,7 +7,9 @@ type User struct {
 }
 
 type AuthIdentity struct {
-	ID   int
-	UID  string
-	User User
+	ID       int
+	Password *string
+	UID      string
+	User     User
+	UserID   int `db:"user_id"`
 }
