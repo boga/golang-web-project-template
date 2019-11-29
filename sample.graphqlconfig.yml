@@ -1,0 +1,16 @@
+{
+  "name": "freddy",
+  "schemaPath": "schema.graphql",
+  "extensions": {
+    "endpoints": {
+      "Default GraphQL Endpoint": {
+        "url": "http://localhost:5555/api",
+        "headers": {
+          "Authorization": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwidHlwZSI6ImF1dGhlbnRpY2F0aW9uIiwiY29udHJvbGxlZF9ieV91c2VyX2lkIjowLCJleHAiOjE1NzczNjE5NDR9.ONCAd-SX1yzZrizzHo40Qz5jF7LTq5-9JEcm-8C0tmVa9S0R5SMttpWmlP_QyFrkupzaNAOvpUrJq9ez5xxSxg",
+          "user-agent": "JS GraphQL"
+        },
+        "introspect": true
+      }
+    }
+  }
+}

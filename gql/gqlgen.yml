@@ -1,0 +1,22 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+schema:
+  - schema.graphql
+exec:
+  filename: generated.go
+model:
+  filename: models_gen.go
+resolver:
+  filename: resolvers/resolver.go
+  type: Resolver
+autobind:
+  - cipherassets.core/model
+
+models:
+  AuthIdentity:
+    model: model.AuthIdentity
+  User:
+    model: model.User

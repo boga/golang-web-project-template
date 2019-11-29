@@ -1,0 +1,28 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type AuthIdentity {
+  id: ID!
+  uid: String!
+  user: User!
+}
+
+type User {
+  authIdentities: [AuthIdentity!]!
+  id: ID!
+  name: String!
+  banned: Boolean!
+}
+
+type Query {
+  me: User!
+}
+
+input NewAuthIdentity {
+  uid: String!
+}
+
+type Mutation {
+  createAuthIdentity(input: NewAuthIdentity!): AuthIdentity!
+}

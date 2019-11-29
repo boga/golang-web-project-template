@@ -5,9 +5,12 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/99designs/gqlgen/handler"
 	"github.com/go-chi/chi"
 
 	core "cipherassets.core"
+	"cipherassets.core/gql"
+	"cipherassets.core/gql/resolvers"
 	"cipherassets.core/store"
 )
 
@@ -27,23 +30,27 @@ func NewREST(config *core.Config) (*REST, error) {
 
 func (s REST) Serve() error {
 	router := chi.NewRouter()
-	router.Get("/api", func(w http.ResponseWriter, r *http.Request) {
-		if _, err := w.Write([]byte("graphql")); err != nil {
-			log.Printf("can't write to response: %s", err.Error())
-		}
-		// users, err := s.dataService.UserStore.GetUsers()
-		// if err != nil {
-		// 	log.Printf(err.Error())
-		// }
-		// log.Printf("%+v", users)
-		// userStr, err := json.Marshal(users)
-		// if err != nil {
-		// 	log.Printf("can't marshal users list: %s", err.Error())
-		// }
-		// log.Printf("%s", userStr)
-		//
-		// _ = users
-	})
+	// router.Get("/api", func(w http.ResponseWriter, r *http.Request) {
+	// 	if _, err := w.Write([]byte("graphql")); err != nil {
+	// 		log.Printf("can't write to response: %s", err.Error())
+	// 	}
+	// 	// users, err := s.dataService.UserStore.GetUsers()
+	// 	// if err != nil {
+	// 	// 	log.Printf(err.Error())
+	// 	// }
+	// 	// log.Printf("%+v", users)
+	// 	// userStr, err := json.Marshal(users)
+	// 	// if err != nil {
+	// 	// 	log.Printf("can't marshal users list: %s", err.Error())
+	// 	// }
+	// 	// log.Printf("%s", userStr)
+	// 	//
+	// 	// _ = users
+	// })
+
+	router.Handle("/playground", handler.Playground("GraphQL playground", "/api"))
+	router.Handle("/api", handler.GraphQL(gql.NewExecutableSchema(gql.Config{Resolvers: resolvers.NewResolver(s.dataService)})))
+
 	log.Printf("REST server runs on http://localhost:7000")
 	return http.ListenAndServe(":7000", router)
 }
