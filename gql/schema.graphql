@@ -25,6 +25,7 @@ type Mutation {
     signup(creds: SignupInput!): SignupResponse!
     totpGenerate: TOTPGenerateResponse! @auth(addUserToCtx: true)
     totpSetup(data: TOTPSetupInput!): TOTPSetupResponse! @auth(addUserToCtx: true)
+    totpVerify(data: TOTPVerifyInput!): SigninResponse! @auth(addUserToCtx: true)
     #  createAuthIdentity(input: NewAuthIdentity!): AuthIdentity!
 }
 
@@ -44,6 +45,10 @@ type SignupResponse {
 input SigninInput {
     email: String!
     password: String!
+}
+
+input TOTPVerifyInput {
+    code: String!
 }
 
 input TOTPSetupInput {

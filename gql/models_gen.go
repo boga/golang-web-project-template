@@ -36,3 +36,7 @@ type TOTPSetupInput struct {
 type TOTPSetupResponse struct {
 	BackupCodes []string `json:"backupCodes"`
 }
+
+type TOTPVerifyInput struct {
+	Code string `json:"code"`
+}
