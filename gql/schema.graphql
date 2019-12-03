@@ -24,6 +24,7 @@ type Mutation {
     signin(creds: SigninInput!): SigninResponse!
     signup(creds: SignupInput!): SignupResponse!
     totpGenerate: TOTPGenerateResponse! @auth(addUserToCtx: true)
+    totpSetup(data: TOTPSetupInput!): TOTPSetupResponse! @auth(addUserToCtx: true)
     #  createAuthIdentity(input: NewAuthIdentity!): AuthIdentity!
 }
 
@@ -45,6 +46,10 @@ input SigninInput {
     password: String!
 }
 
+input TOTPSetupInput {
+    code: String!
+}
+
 input SignupInput {
     email: String!
     password: String!
@@ -52,6 +57,11 @@ input SignupInput {
 
 type TOTPGenerateResponse {
     qrcode: String!
+}
+
+type TOTPSetupResponse {
+    backupCodes: [String!]!
+    #    token: String!
 }
 
 directive @auth(addUserToCtx: Boolean) on FIELD_DEFINITION

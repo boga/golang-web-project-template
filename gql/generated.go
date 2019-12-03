@@ -55,6 +55,7 @@ type ComplexityRoot struct {
 		Signin       func(childComplexity int, creds SigninInput) int
 		Signup       func(childComplexity int, creds SignupInput) int
 		TotpGenerate func(childComplexity int) int
+		TotpSetup    func(childComplexity int, data TOTPSetupInput) int
 	}
 
 	Query struct {
@@ -74,6 +75,10 @@ type ComplexityRoot struct {
 		Qrcode func(childComplexity int) int
 	}
 
+	TOTPSetupResponse struct {
+		BackupCodes func(childComplexity int) int
+	}
+
 	User struct {
 		AuthIdentities func(childComplexity int) int
 		ID             func(childComplexity int) int
@@ -85,6 +90,7 @@ type MutationResolver interface {
 	Signin(ctx context.Context, creds SigninInput) (*SigninResponse, error)
 	Signup(ctx context.Context, creds SignupInput) (*SignupResponse, error)
 	TotpGenerate(ctx context.Context) (*TOTPGenerateResponse, error)
+	TotpSetup(ctx context.Context, data TOTPSetupInput) (*TOTPSetupResponse, error)
 }
 type QueryResolver interface {
 	Me(ctx context.Context) (*model.User, error)
@@ -157,6 +163,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.TotpGenerate(childComplexity), true
 
+	case "Mutation.totpSetup":
+		if e.complexity.Mutation.TotpSetup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_totpSetup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TotpSetup(childComplexity, args["data"].(TOTPSetupInput)), true
+
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
 			break
@@ -191,6 +209,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TOTPGenerateResponse.Qrcode(childComplexity), true
+
+	case "TOTPSetupResponse.backupCodes":
+		if e.complexity.TOTPSetupResponse.BackupCodes == nil {
+			break
+		}
+
+		return e.complexity.TOTPSetupResponse.BackupCodes(childComplexity), true
 
 	case "User.authIdentities":
 		if e.complexity.User.AuthIdentities == nil {
@@ -301,6 +326,7 @@ type Mutation {
     signin(creds: SigninInput!): SigninResponse!
     signup(creds: SignupInput!): SignupResponse!
     totpGenerate: TOTPGenerateResponse! @auth(addUserToCtx: true)
+    totpSetup(data: TOTPSetupInput!): TOTPSetupResponse! @auth(addUserToCtx: true)
     #  createAuthIdentity(input: NewAuthIdentity!): AuthIdentity!
 }
 
@@ -322,6 +348,10 @@ input SigninInput {
     password: String!
 }
 
+input TOTPSetupInput {
+    code: String!
+}
+
 input SignupInput {
     email: String!
     password: String!
@@ -329,6 +359,11 @@ input SignupInput {
 
 type TOTPGenerateResponse {
     qrcode: String!
+}
+
+type TOTPSetupResponse {
+    backupCodes: [String!]!
+    #    token: String!
 }
 
 directive @auth(addUserToCtx: Boolean) on FIELD_DEFINITION
@@ -378,6 +413,20 @@ func (ec *executionContext) field_Mutation_signup_args(ctx context.Context, rawA
 		}
 	}
 	args["creds"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_totpSetup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 TOTPSetupInput
+	if tmp, ok := rawArgs["data"]; ok {
+		arg0, err = ec.unmarshalNTOTPSetupInput2cipherassetsᚗcoreᚋgqlᚐTOTPSetupInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["data"] = arg0
 	return args, nil
 }
 
@@ -691,6 +740,74 @@ func (ec *executionContext) _Mutation_totpGenerate(ctx context.Context, field gr
 	return ec.marshalNTOTPGenerateResponse2ᚖcipherassetsᚗcoreᚋgqlᚐTOTPGenerateResponse(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_totpSetup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_totpSetup_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().TotpSetup(rctx, args["data"].(TOTPSetupInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			addUserToCtx, err := ec.unmarshalOBoolean2ᚖbool(ctx, true)
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0, addUserToCtx)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TOTPSetupResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *cipherassets.core/gql.TOTPSetupResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*TOTPSetupResponse)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTOTPSetupResponse2ᚖcipherassetsᚗcoreᚋgqlᚐTOTPSetupResponse(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -949,6 +1066,43 @@ func (ec *executionContext) _TOTPGenerateResponse_qrcode(ctx context.Context, fi
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TOTPSetupResponse_backupCodes(ctx context.Context, field graphql.CollectedField, obj *TOTPSetupResponse) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TOTPSetupResponse",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BackupCodes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_authIdentities(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -2258,6 +2412,24 @@ func (ec *executionContext) unmarshalInputSignupInput(ctx context.Context, obj i
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTOTPSetupInput(ctx context.Context, obj interface{}) (TOTPSetupInput, error) {
+	var it TOTPSetupInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "code":
+			var err error
+			it.Code, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2330,6 +2502,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "totpGenerate":
 			out.Values[i] = ec._Mutation_totpGenerate(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "totpSetup":
+			out.Values[i] = ec._Mutation_totpSetup(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2460,6 +2637,33 @@ func (ec *executionContext) _TOTPGenerateResponse(ctx context.Context, sel ast.S
 			out.Values[i] = graphql.MarshalString("TOTPGenerateResponse")
 		case "qrcode":
 			out.Values[i] = ec._TOTPGenerateResponse_qrcode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var tOTPSetupResponseImplementors = []string{"TOTPSetupResponse"}
+
+func (ec *executionContext) _TOTPSetupResponse(ctx context.Context, sel ast.SelectionSet, obj *TOTPSetupResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, tOTPSetupResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TOTPSetupResponse")
+		case "backupCodes":
+			out.Values[i] = ec._TOTPSetupResponse_backupCodes(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2872,6 +3076,35 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNTOTPGenerateResponse2cipherassetsᚗcoreᚋgqlᚐTOTPGenerateResponse(ctx context.Context, sel ast.SelectionSet, v TOTPGenerateResponse) graphql.Marshaler {
 	return ec._TOTPGenerateResponse(ctx, sel, &v)
 }
@@ -2884,6 +3117,24 @@ func (ec *executionContext) marshalNTOTPGenerateResponse2ᚖcipherassetsᚗcore�
 		return graphql.Null
 	}
 	return ec._TOTPGenerateResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTOTPSetupInput2cipherassetsᚗcoreᚋgqlᚐTOTPSetupInput(ctx context.Context, v interface{}) (TOTPSetupInput, error) {
+	return ec.unmarshalInputTOTPSetupInput(ctx, v)
+}
+
+func (ec *executionContext) marshalNTOTPSetupResponse2cipherassetsᚗcoreᚋgqlᚐTOTPSetupResponse(ctx context.Context, sel ast.SelectionSet, v TOTPSetupResponse) graphql.Marshaler {
+	return ec._TOTPSetupResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTOTPSetupResponse2ᚖcipherassetsᚗcoreᚋgqlᚐTOTPSetupResponse(ctx context.Context, sel ast.SelectionSet, v *TOTPSetupResponse) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._TOTPSetupResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUser2cipherassetsᚗcoreᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {

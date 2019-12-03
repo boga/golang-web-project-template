@@ -28,3 +28,11 @@ type SignupResponse struct {
 type TOTPGenerateResponse struct {
 	Qrcode string `json:"qrcode"`
 }
+
+type TOTPSetupInput struct {
+	Code string `json:"code"`
+}
+
+type TOTPSetupResponse struct {
+	BackupCodes []string `json:"backupCodes"`
+}

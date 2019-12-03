@@ -3,7 +3,11 @@ package store
 import (
 	"errors"
 	"fmt"
+	"math/rand"
+	"strings"
+	"time"
 
+	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/bcrypt"
 
 	core "cipherassets.core"
@@ -15,6 +19,7 @@ type UserStore struct {
 }
 
 const PasswordDefaultCost = 10
+const backupCodeLen = 10
 
 func (s *UserStore) NewIdentity(uid string, password string, userID int) (*model.AuthIdentity, error) {
 	i := &model.AuthIdentity{
@@ -59,6 +64,59 @@ func (s *UserStore) SaveIdentity(i *model.AuthIdentity) error {
 	}
 
 	return nil
+}
+
+func (s *UserStore) ValidateTOTPCode(user *model.User, code string, noBackupCodesIsOK bool) error {
+	ok := false
+
+	if len(code) == backupCodeLen {
+		backupCodes := strings.Split(*user.TOTPBackupCodes, "\n")
+		for i := 0; !ok && i < len(backupCodes); i++ {
+			ok = code == backupCodes[i]
+		}
+	} else {
+		ok = totp.Validate(code, *user.TOTPSecret)
+	}
+
+	if !ok {
+		return errors.New("code is wrong")
+	}
+
+	if err := s.RemoveBackupCode(user, code); err != nil {
+		if _, ok = err.(NoBackupCodesError); ok && noBackupCodesIsOK {
+			return nil
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserStore) RemoveBackupCode(user *model.User, code string) error {
+	if *user.TOTPBackupCodes == "" {
+		return NoBackupCodesError{}
+	}
+
+	backupCodes := strings.Split(*user.TOTPBackupCodes, "\n")
+	idx := -1
+	for i := 0; i < len(backupCodes); i++ {
+		if code == backupCodes[i] && len(backupCodes[i]) != 0 {
+			idx = i
+		}
+	}
+	if idx > -1 {
+		backupCodes[idx] = backupCodes[len(backupCodes)-1]
+		*user.TOTPBackupCodes = strings.Join(backupCodes[0:len(backupCodes)-1], "\n")
+	}
+
+	return nil
+}
+
+type NoBackupCodesError struct {
+}
+
+func (e NoBackupCodesError) Error() string {
+	return "No backup codes"
 }
 
 func (s *UserStore) SaveUser(u *model.User) error {
@@ -144,4 +202,19 @@ func (s *UserStore) GetUsers() ([]model.User, error) {
 	}
 
 	return people, nil
+}
+
+func (s *UserStore) NewBackupCodes() []string {
+	var backupCodes []string
+	letters := []rune("ABCDEFGHJKLMNPQRSTWXYZabcdefghjkmnpqrstwxyz23456789")
+	rand.Seed(time.Now().UnixNano())
+	for len(backupCodes) < 10 {
+		code := ""
+		for len(code) < backupCodeLen {
+			code += string(letters[rand.Intn(len(letters))])
+		}
+		backupCodes = append(backupCodes, code)
+	}
+
+	return backupCodes
 }
