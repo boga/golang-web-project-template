@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,13 +10,15 @@ import (
 	"github.com/go-chi/chi"
 
 	core "cipherassets.core"
-	"cipherassets.core/gql"
 	"cipherassets.core/gql/resolvers"
+	"cipherassets.core/gql/schema"
+	"cipherassets.core/model"
 	"cipherassets.core/store"
 )
 
 // Rest is a rest access server
 type REST struct {
+	config      *core.Config
 	dataService *store.Store
 }
 
@@ -47,10 +50,28 @@ func (s REST) Serve() error {
 	// 	//
 	// 	// _ = users
 	// })
+	router.Use(s.AuthMiddleware)
 
 	router.Handle("/playground", handler.Playground("GraphQL playground", "/api"))
 	router.Handle("/api", handler.GraphQL(gql.NewExecutableSchema(gql.Config{Resolvers: resolvers.NewResolver(s.dataService)})))
 
 	log.Printf("REST server runs on http://localhost:7000")
 	return http.ListenAndServe(":7000", router)
+}
+
+func (s REST) AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tokenStr := r.Header.Get("Authorization")
+		var err error
+		ctx := r.Context()
+		if len(tokenStr) > 0 {
+			token := model.AuthJWT{}
+			if err = s.dataService.JWTStore.ParseJWTString(&tokenStr, &token); err == nil {
+				ctx = context.WithValue(ctx, resolvers.AuthIdentityIDContextKey, token.AuthIdentityID)
+			}
+
+		}
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
