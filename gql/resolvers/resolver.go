@@ -1,16 +1,26 @@
 package resolvers
 
 import (
+	core "cipherassets.core"
 	"cipherassets.core/gql"
 	"cipherassets.core/store"
 )
 
+type ContextKey string
+
+var AuthIdentityIDContextKey = ContextKey("AuthIdentityID")
+var AuthIdentityContextKey = ContextKey("AuthIdentity")
+
 type Resolver struct {
-	store *store.Store
+	config *core.Config
+	store  *store.Store
 }
 
-func NewResolver(store *store.Store) *Resolver {
-	return &Resolver{store: store}
+func NewResolver(config *core.Config, store *store.Store) *Resolver {
+	return &Resolver{
+		config: config,
+		store:  store,
+	}
 }
 
 func (r *Resolver) Mutation() gql.MutationResolver {
