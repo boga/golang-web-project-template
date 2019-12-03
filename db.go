@@ -16,8 +16,8 @@ type DB struct {
 
 func NewDB(c *Config) (*DB, error) {
 	// db, err := sqlx.Connect("postgres", "user=foo dbname=bar sslmode=disable")
-	dbSQLX, err := sqlx.Connect(c.Database.driver, fmt.Sprintf("%s:%s@(%s:%d)/%s",
-		c.Database.user, c.Database.pass, c.Database.host, c.Database.port, c.Database.name))
+	dbSQLX, err := sqlx.Connect(c.Database.Driver, fmt.Sprintf("%s:%s@(%s:%d)/%s",
+		c.Database.User, c.Database.Pass, c.Database.Host, c.Database.Port, c.Database.Name))
 
 	if err != nil {
 		return nil, fmt.Errorf("can't connect to DB: %w", err)

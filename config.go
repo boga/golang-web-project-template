@@ -12,19 +12,24 @@ import (
 )
 
 type Config struct {
+	App      *appConfig
 	Database *databaseConfig
-	Debug    bool
 	JWT      *jwtConfig
 }
 
+type appConfig struct {
+	Name  string
+	Debug bool
+}
+
 type databaseConfig struct {
-	driver string
-	dsn    string
-	host   string
-	name   string
-	pass   string
-	port   int
-	user   string
+	Driver string
+	Dsn    string
+	Host   string
+	Name   string
+	Pass   string
+	Port   int
+	User   string
 }
 
 type jwtConfig struct {
@@ -56,12 +61,12 @@ func (c jwtConfig) Valid() error {
 // }
 
 func (c databaseConfig) Valid() error {
-	valid := len(c.driver) != 0 &&
-		len(c.host) != 0 &&
-		len(c.name) != 0 &&
-		len(c.pass) != 0 &&
-		c.port != 0 &&
-		len(c.user) != 0
+	valid := len(c.Driver) != 0 &&
+		len(c.Host) != 0 &&
+		len(c.Name) != 0 &&
+		len(c.Pass) != 0 &&
+		c.Port != 0 &&
+		len(c.User) != 0
 	if !valid {
 		return fmt.Errorf("database config is not valid, some options missing")
 	}
@@ -103,12 +108,12 @@ func NewConfig() (*Config, error) {
 	}
 
 	dbConf := databaseConfig{
-		driver: getEnvString("DB_DRIVER", ""),
-		host:   getEnvString("DB_HOST", ""),
-		name:   getEnvString("DB_NAME", ""),
-		pass:   getEnvString("DB_PASSWORD", ""),
-		port:   getEnvInt("DB_PORT", 0),
-		user:   getEnvString("DB_USER", ""),
+		Driver: getEnvString("DB_DRIVER", ""),
+		Host:   getEnvString("DB_HOST", ""),
+		Name:   getEnvString("DB_NAME", ""),
+		Pass:   getEnvString("DB_PASSWORD", ""),
+		Port:   getEnvInt("DB_PORT", 0),
+		User:   getEnvString("DB_USER", ""),
 	}
 	if err := dbConf.Valid(); err != nil {
 		return nil, err
@@ -127,8 +132,13 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
+	appConf := appConfig{
+		Name:  getEnvString("NAME", "Cipher Assets"),
+		Debug: getEnvBool("DEBUG", false),
+	}
+
 	c := &Config{
-		Debug:    getEnvBool("DEBUG", false),
+		App:      &appConf,
 		Database: &dbConf,
 		JWT:      &jwtConf,
 	}
