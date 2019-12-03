@@ -24,3 +24,7 @@ type SignupInput struct {
 type SignupResponse struct {
 	User *model.User `json:"user"`
 }
+
+type TOTPGenerateResponse struct {
+	Qrcode string `json:"qrcode"`
+}
