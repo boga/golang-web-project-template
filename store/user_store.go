@@ -4,9 +4,10 @@ import (
 	"errors"
 	"fmt"
 
+	"golang.org/x/crypto/bcrypt"
+
 	core "cipherassets.core"
 	"cipherassets.core/model"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserStore struct {
@@ -64,9 +65,19 @@ func (s *UserStore) SaveUser(u *model.User) error {
 	var query string
 	var err error
 	if u.ID == 0 {
-		query = "INSERT INTO users (name) VALUES (:name)"
+		query = `
+			INSERT INTO users (name, totp_backup_codes, totp_enabled, totp_secret) 
+			           VALUES (:name, :totp_backup_codes, :totp_enabled, :totp_secret)
+	   `
 	} else {
-		query = "UPDATE users SET name = ? WHERE id = :id"
+		query = `
+			UPDATE users 
+			SET name = :name, 
+			 	totp_backup_codes = :totp_backup_codes,
+			 	totp_enabled = :totp_enabled,
+			 	totp_secret = :totp_secret
+			WHERE id = :id
+		`
 	}
 	result, err := s.db.NamedExec(query, u)
 	if err != nil {
@@ -96,6 +107,34 @@ func (s *UserStore) FindIdentityByUID(uid string) (*model.AuthIdentity, error) {
 	}
 
 	return &i, nil
+}
+
+func (s *UserStore) FindIdentityByID(id int) (*model.AuthIdentity, error) {
+	i := model.AuthIdentity{}
+	if err := s.db.Get(&i, "SELECT * FROM auth_identities WHERE id = ?", id); err != nil {
+		var nfe core.NotFoundError
+		if errors.As(err, &nfe) {
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("can't get identity by id='%d': %w", id, err)
+	}
+
+	return &i, nil
+}
+
+func (s *UserStore) FindUserByID(id int) (*model.User, error) {
+	u := model.User{}
+	if err := s.db.Get(&u, "SELECT * FROM users WHERE id = ?", id); err != nil {
+		var nfe core.NotFoundError
+		if errors.As(err, &nfe) {
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("can't get user by id='%d': %w", id, err)
+	}
+
+	return &u, nil
 }
 
 func (s *UserStore) GetUsers() ([]model.User, error) {
