@@ -26,6 +26,22 @@ func (s *JWTStore) GetJWTString(t jwt.Claims) (*string, error) {
 	return &tokenString, nil
 }
 
+func (s *JWTStore) ParseJWTString(tokenStr *string, claims jwt.Claims) error {
+	var err error
+	tkn := &jwt.Token{
+		Claims: claims,
+	}
+	tkn, err = jwt.ParseWithClaims(*tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(s.config.JWT.Secret), nil
+	})
+	_ = err
+	if tkn == nil || !tkn.Valid {
+		return jwt.ErrInvalidKey
+	}
+
+	return nil
+}
+
 func (s *JWTStore) MakeAuthJWT(identity *model.AuthIdentity) (*model.AuthJWT, error) {
 	t := &model.AuthJWT{
 		AuthIdentityID: identity.ID,
