@@ -28,7 +28,10 @@ func NewREST(config *core.Config) (*REST, error) {
 		return nil, fmt.Errorf("can't create store: %w", err)
 	}
 
-	return &REST{dataService: s}, nil
+	return &REST{
+		config:      config,
+		dataService: s,
+	}, nil
 }
 
 func (s REST) Serve() error {
@@ -53,7 +56,7 @@ func (s REST) Serve() error {
 	router.Use(s.AuthMiddleware)
 
 	router.Handle("/playground", handler.Playground("GraphQL playground", "/api"))
-	router.Handle("/api", handler.GraphQL(gql.NewExecutableSchema(gql.Config{Resolvers: resolvers.NewResolver(s.dataService)})))
+	router.Handle("/api", handler.GraphQL(schema.NewSchema(s.config, s.dataService)))
 
 	log.Printf("REST server runs on http://localhost:7000")
 	return http.ListenAndServe(":7000", router)

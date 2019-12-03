@@ -23,6 +23,7 @@ type User {
 type Mutation {
     signin(creds: SigninInput!): SigninResponse!
     signup(creds: SignupInput!): SignupResponse!
+    totpGenerate: TOTPGenerateResponse! @auth(addUserToCtx: true)
     #  createAuthIdentity(input: NewAuthIdentity!): AuthIdentity!
 }
 
@@ -48,3 +49,9 @@ input SignupInput {
     email: String!
     password: String!
 }
+
+type TOTPGenerateResponse {
+    qrcode: String!
+}
+
+directive @auth(addUserToCtx: Boolean) on FIELD_DEFINITION
