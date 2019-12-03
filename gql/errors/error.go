@@ -44,3 +44,21 @@ func NewUnauthorizedError(err error) ApiError {
 		HTTPCode:   http.StatusUnauthorized,
 	}
 }
+
+func NewTOTPNotEnabledError(err error) ApiError {
+	return ApiError{
+		err:        err,
+		ErrCode:    "totp-not-enabled",
+		ErrMessage: "totp is not enabled for user",
+		HTTPCode:   http.StatusBadRequest,
+	}
+}
+
+func NewTOTPNotValidError(err error) ApiError {
+	return ApiError{
+		err:        err,
+		ErrCode:    "totp-not-valid",
+		ErrMessage: "TOTP not valid for user",
+		HTTPCode:   http.StatusBadRequest,
+	}
+}

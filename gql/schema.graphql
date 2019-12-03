@@ -23,6 +23,7 @@ type User {
 type Mutation {
     signin(creds: SigninInput!): SigninResponse!
     signup(creds: SignupInput!): SignupResponse!
+    totpDisable(data: TOTPDisableInput!): TOTPDisableResponse! @auth(addUserToCtx: true)
     totpGenerate: TOTPGenerateResponse! @auth(addUserToCtx: true)
     totpSetup(data: TOTPSetupInput!): TOTPSetupResponse! @auth(addUserToCtx: true)
     totpVerify(data: TOTPVerifyInput!): SigninResponse! @auth(addUserToCtx: true)
@@ -64,9 +65,18 @@ type TOTPGenerateResponse {
     qrcode: String!
 }
 
+input TOTPDisableInput {
+    code: String!
+}
+
 type TOTPSetupResponse {
     backupCodes: [String!]!
     #    token: String!
 }
+
+type TOTPDisableResponse {
+    success: Boolean!
+}
+
 
 directive @auth(addUserToCtx: Boolean) on FIELD_DEFINITION

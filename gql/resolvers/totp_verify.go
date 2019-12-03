@@ -3,7 +3,6 @@ package resolvers
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"cipherassets.core/gql"
 	"cipherassets.core/gql/errors"
@@ -18,12 +17,12 @@ func (r *mutationResolver) TotpVerify(ctx context.Context, data gql.TOTPVerifyIn
 	}
 
 	if !user.TOTPEnabled {
-		return nil, errors.NewApiError(nil, "totp-not-enabled", "totp is not enabled for user", http.StatusBadRequest)
+		return nil, errors.NewTOTPNotEnabledError(nil)
 	}
 
 	err = r.store.UserStore.ValidateTOTPCode(user, data.Code, false)
 	if err != nil {
-		return nil, fmt.Errorf("TOTP not valid for user (%d): %w", user.ID, err)
+		return nil, errors.NewTOTPNotValidError(err)
 	}
 	if err := r.store.UserStore.SaveUser(user); err != nil {
 		return nil, fmt.Errorf("can't save TOTP enabled to user (%d): %w", user.ID, err)
