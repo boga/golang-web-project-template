@@ -12,6 +12,7 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.2.0
+	github.com/pquerna/otp v1.2.0
 	github.com/vektah/gqlparser v1.2.0
 	golang.org/x/crypto v0.0.0-20191122220453-ac88ee75c92c
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
