@@ -65,3 +65,12 @@ func (s *JWTStore) MakeRefreshJWT(identity *model.AuthIdentity) (*model.RefreshJ
 
 	return t, nil
 }
+
+func (s *JWTStore) MakeTOTPJWT(identity *model.AuthIdentity) (*model.TOTPJWT, error) {
+	t := &model.TOTPJWT{}
+	t.AuthIdentityID = identity.ID
+	t.ExpiresAt = time.Now().Add(time.Minute * 15).Unix()
+	t.Type = model.JWTTypeTOTP
+
+	return t, nil
+}
