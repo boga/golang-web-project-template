@@ -31,12 +31,17 @@ type Mutation {
 }
 
 type Query {
+    getAuthJWT: GetAuthJWTResponse!
     me: User!
 }
 
 type SigninResponse {
     auth_token: String!
     refresh_token: String!
+}
+
+type GetAuthJWTResponse {
+    auth_token: String!
 }
 
 type SignupResponse {
