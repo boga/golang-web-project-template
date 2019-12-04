@@ -28,15 +28,6 @@ func (r *mutationResolver) TotpVerify(ctx context.Context, data gql.TOTPVerifyIn
 		return nil, fmt.Errorf("can't save TOTP enabled to user (%d): %w", user.ID, err)
 	}
 
-	authJWT, err := r.store.JWTStore.MakeAuthJWT(i)
-	if err != nil {
-		return nil, fmt.Errorf("can't make auth jwt for i %d: %w", i.ID, err)
-	}
-	authJWTStr, err := r.store.JWTStore.GetJWTString(authJWT)
-	if err != nil {
-		return nil, fmt.Errorf("can't make auth jwt string for i %d: %w", i.ID, err)
-	}
-
 	refreshJWT, err := r.store.JWTStore.MakeRefreshJWT(i)
 	if err != nil {
 		return nil, fmt.Errorf("can't make refresh jwt for i %d: %w", i.ID, err)
@@ -47,7 +38,6 @@ func (r *mutationResolver) TotpVerify(ctx context.Context, data gql.TOTPVerifyIn
 	}
 
 	return &gql.SigninResponse{
-		AuthToken:    *authJWTStr,
-		RefreshToken: *refreshJWTStr,
+		RefreshToken: refreshJWTStr,
 	}, nil
 }
