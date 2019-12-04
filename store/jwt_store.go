@@ -43,20 +43,19 @@ func (s *JWTStore) ParseJWTString(tokenStr *string, claims jwt.Claims) error {
 }
 
 func (s *JWTStore) MakeAuthJWT(identity *model.AuthIdentity) (*model.AuthJWT, error) {
-	t := &model.AuthJWT{
-		AuthIdentityID: identity.ID,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(*s.config.JWT.AuthTokenTTL).Unix(),
-		},
-	}
+	t := &model.AuthJWT{}
+	t.AuthIdentityID = identity.ID
+	t.ExpiresAt = time.Now().Add(*s.config.JWT.AuthTokenTTL).Unix()
+	t.Type = model.JWTTypeAuth
 
 	return t, nil
 }
 
 func (s *JWTStore) MakeRefreshJWT(identity *model.AuthIdentity) (*model.RefreshJWT, error) {
-	t := &model.RefreshJWT{
-		AuthIdentityID: identity.ID,
-	}
+	t := &model.RefreshJWT{}
+	t.AuthIdentityID = identity.ID
+	t.ExpiresAt = time.Now().Add(time.Hour * 24 * 365).Unix()
+	t.Type = model.JWTTypeRefresh
 	insertResult := s.db.MustExec("INSERT INTO refresh_tokens (auth_identity_id) VALUES (?)", identity.ID)
 	lastInsertId, err := insertResult.LastInsertId()
 	if err != nil {

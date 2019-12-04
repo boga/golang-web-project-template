@@ -10,6 +10,7 @@ type ContextKey string
 
 var AuthIdentityIDContextKey = ContextKey("AuthIdentityID")
 var AuthIdentityContextKey = ContextKey("AuthIdentity")
+var JWTTypeContextKey = ContextKey("JWTType")
 
 type Resolver struct {
 	config *core.Config
