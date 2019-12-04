@@ -51,6 +51,10 @@ type ComplexityRoot struct {
 		User func(childComplexity int) int
 	}
 
+	GetAuthJWTResponse struct {
+		AuthToken func(childComplexity int) int
+	}
+
 	Mutation struct {
 		Signin       func(childComplexity int, creds SigninInput) int
 		Signup       func(childComplexity int, creds SignupInput) int
@@ -61,12 +65,13 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Me func(childComplexity int) int
+		GetAuthJwt func(childComplexity int) int
+		Me         func(childComplexity int) int
 	}
 
 	SigninResponse struct {
-		AuthToken    func(childComplexity int) int
 		RefreshToken func(childComplexity int) int
+		TotpToken    func(childComplexity int) int
 	}
 
 	SignupResponse struct {
@@ -101,6 +106,7 @@ type MutationResolver interface {
 	TotpVerify(ctx context.Context, data TOTPVerifyInput) (*SigninResponse, error)
 }
 type QueryResolver interface {
+	GetAuthJwt(ctx context.Context) (*GetAuthJWTResponse, error)
 	Me(ctx context.Context) (*model.User, error)
 }
 
@@ -139,6 +145,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AuthIdentity.User(childComplexity), true
+
+	case "GetAuthJWTResponse.auth_token":
+		if e.complexity.GetAuthJWTResponse.AuthToken == nil {
+			break
+		}
+
+		return e.complexity.GetAuthJWTResponse.AuthToken(childComplexity), true
 
 	case "Mutation.signin":
 		if e.complexity.Mutation.Signin == nil {
@@ -207,6 +220,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.TotpVerify(childComplexity, args["data"].(TOTPVerifyInput)), true
 
+	case "Query.getAuthJWT":
+		if e.complexity.Query.GetAuthJwt == nil {
+			break
+		}
+
+		return e.complexity.Query.GetAuthJwt(childComplexity), true
+
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
 			break
@@ -214,19 +234,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Me(childComplexity), true
 
-	case "SigninResponse.auth_token":
-		if e.complexity.SigninResponse.AuthToken == nil {
-			break
-		}
-
-		return e.complexity.SigninResponse.AuthToken(childComplexity), true
-
 	case "SigninResponse.refresh_token":
 		if e.complexity.SigninResponse.RefreshToken == nil {
 			break
 		}
 
 		return e.complexity.SigninResponse.RefreshToken(childComplexity), true
+
+	case "SigninResponse.totp_token":
+		if e.complexity.SigninResponse.TotpToken == nil {
+			break
+		}
+
+		return e.complexity.SigninResponse.TotpToken(childComplexity), true
 
 	case "SignupResponse.user":
 		if e.complexity.SignupResponse.User == nil {
@@ -368,16 +388,20 @@ type Mutation {
     totpGenerate: TOTPGenerateResponse! @auth(addUserToCtx: true)
     totpSetup(data: TOTPSetupInput!): TOTPSetupResponse! @auth(addUserToCtx: true)
     totpVerify(data: TOTPVerifyInput!): SigninResponse! @auth(addUserToCtx: true)
-    #  createAuthIdentity(input: NewAuthIdentity!): AuthIdentity!
 }
 
 type Query {
+    getAuthJWT: GetAuthJWTResponse!
     me: User!
 }
 
 type SigninResponse {
+    refresh_token: String
+    totp_token: String
+}
+
+type GetAuthJWTResponse {
     auth_token: String!
-    refresh_token: String!
 }
 
 type SignupResponse {
@@ -671,6 +695,43 @@ func (ec *executionContext) _AuthIdentity_user(ctx context.Context, field graphq
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNUser2cipherassetsᚗcoreᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GetAuthJWTResponse_auth_token(ctx context.Context, field graphql.CollectedField, obj *GetAuthJWTResponse) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "GetAuthJWTResponse",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AuthToken, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_signin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1026,6 +1087,43 @@ func (ec *executionContext) _Mutation_totpVerify(ctx context.Context, field grap
 	return ec.marshalNSigninResponse2ᚖcipherassetsᚗcoreᚋgqlᚐSigninResponse(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_getAuthJWT(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetAuthJwt(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*GetAuthJWTResponse)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNGetAuthJWTResponse2ᚖcipherassetsᚗcoreᚋgqlᚐGetAuthJWTResponse(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1138,43 +1236,6 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _SigninResponse_auth_token(ctx context.Context, field graphql.CollectedField, obj *SigninResponse) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "SigninResponse",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AuthToken, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _SigninResponse_refresh_token(ctx context.Context, field graphql.CollectedField, obj *SigninResponse) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1201,15 +1262,46 @@ func (ec *executionContext) _SigninResponse_refresh_token(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SigninResponse_totp_token(ctx context.Context, field graphql.CollectedField, obj *SigninResponse) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "SigninResponse",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotpToken, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _SignupResponse_user(ctx context.Context, field graphql.CollectedField, obj *SignupResponse) (ret graphql.Marshaler) {
@@ -2766,6 +2858,33 @@ func (ec *executionContext) _AuthIdentity(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var getAuthJWTResponseImplementors = []string{"GetAuthJWTResponse"}
+
+func (ec *executionContext) _GetAuthJWTResponse(ctx context.Context, sel ast.SelectionSet, obj *GetAuthJWTResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, getAuthJWTResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GetAuthJWTResponse")
+		case "auth_token":
+			out.Values[i] = ec._GetAuthJWTResponse_auth_token(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -2837,6 +2956,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "getAuthJWT":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getAuthJWT(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "me":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -2877,16 +3010,10 @@ func (ec *executionContext) _SigninResponse(ctx context.Context, sel ast.Selecti
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("SigninResponse")
-		case "auth_token":
-			out.Values[i] = ec._SigninResponse_auth_token(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "refresh_token":
 			out.Values[i] = ec._SigninResponse_refresh_token(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+		case "totp_token":
+			out.Values[i] = ec._SigninResponse_totp_token(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3338,6 +3465,20 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNGetAuthJWTResponse2cipherassetsᚗcoreᚋgqlᚐGetAuthJWTResponse(ctx context.Context, sel ast.SelectionSet, v GetAuthJWTResponse) graphql.Marshaler {
+	return ec._GetAuthJWTResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGetAuthJWTResponse2ᚖcipherassetsᚗcoreᚋgqlᚐGetAuthJWTResponse(ctx context.Context, sel ast.SelectionSet, v *GetAuthJWTResponse) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._GetAuthJWTResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2int(ctx context.Context, v interface{}) (int, error) {

@@ -6,14 +6,18 @@ import (
 	"cipherassets.core/model"
 )
 
+type GetAuthJWTResponse struct {
+	AuthToken string `json:"auth_token"`
+}
+
 type SigninInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 type SigninResponse struct {
-	AuthToken    string `json:"auth_token"`
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken *string `json:"refresh_token"`
+	TotpToken    *string `json:"totp_token"`
 }
 
 type SignupInput struct {

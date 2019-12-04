@@ -27,7 +27,6 @@ type Mutation {
     totpGenerate: TOTPGenerateResponse! @auth(addUserToCtx: true)
     totpSetup(data: TOTPSetupInput!): TOTPSetupResponse! @auth(addUserToCtx: true)
     totpVerify(data: TOTPVerifyInput!): SigninResponse! @auth(addUserToCtx: true)
-    #  createAuthIdentity(input: NewAuthIdentity!): AuthIdentity!
 }
 
 type Query {
@@ -36,8 +35,8 @@ type Query {
 }
 
 type SigninResponse {
-    auth_token: String!
-    refresh_token: String!
+    refresh_token: String
+    totp_token: String
 }
 
 type GetAuthJWTResponse {
