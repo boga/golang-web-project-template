@@ -53,7 +53,7 @@ func (s REST) Serve() error {
 	// 	//
 	// 	// _ = users
 	// })
-	router.Use(s.AuthMiddleware)
+	router.Use(s.JWTMiddleware)
 
 	router.Handle("/playground", handler.Playground("GraphQL playground", "/api"))
 	router.Handle("/api", handler.GraphQL(schema.NewSchema(s.config, s.dataService)))
@@ -62,17 +62,17 @@ func (s REST) Serve() error {
 	return http.ListenAndServe(":7000", router)
 }
 
-func (s REST) AuthMiddleware(next http.Handler) http.Handler {
+func (s REST) JWTMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenStr := r.Header.Get("Authorization")
 		var err error
 		ctx := r.Context()
 		if len(tokenStr) > 0 {
-			token := model.AuthJWT{}
+			token := model.RefreshJWT{}
 			if err = s.dataService.JWTStore.ParseJWTString(&tokenStr, &token); err == nil {
 				ctx = context.WithValue(ctx, resolvers.AuthIdentityIDContextKey, token.AuthIdentityID)
+				ctx = context.WithValue(ctx, resolvers.JWTTypeContextKey, token.Type)
 			}
-
 		}
 
 		next.ServeHTTP(w, r.WithContext(ctx))
