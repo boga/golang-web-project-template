@@ -92,6 +92,19 @@ func (s *UserStore) ValidateTOTPCode(user *model.User, code string, noBackupCode
 	return nil
 }
 
+func (s *UserStore) CheckPassword(identity *model.AuthIdentity, password string) error {
+	if identity.Password == nil {
+		return fmt.Errorf("password no set")
+	}
+	hash := []byte(*identity.Password)
+	pass := []byte(password)
+	if err := bcrypt.CompareHashAndPassword(hash, pass); err != nil {
+		return fmt.Errorf("password not valid: %w", err)
+	}
+
+	return nil
+}
+
 func (s *UserStore) RemoveBackupCode(user *model.User, code string) error {
 	if *user.TOTPBackupCodes == "" {
 		return NoBackupCodesError{}
